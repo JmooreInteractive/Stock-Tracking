@@ -1,0 +1,12 @@
+{
+  "name": "stock-tracker",
+  "private": true,
+  "type": "module",
+  "description": "Daily closing-price log with notes, sources, TradingView chart and Yahoo Finance headlines.",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs && python3 -m unittest discover -s tests -p 'test_*.py'"
+  },
+  "devDependencies": {
+    "exceljs": "4.4.0"
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "note": "Imported from STOCK_TRACKER_WORKSHEET_V4 (Tracker tab). Loaded the first time the app opens in a browser.",
+  "entries": [
+    {
+      "id": "seed-2026-10-20",
+      "date": "2026-10-20",
+      "prices": {
+        "TTWO": 206.7,
+        "SKYD": 7.1,
+        "META": 694.25
+      },
+      "sp": 8000,
+      "notes": {},
+      "sources": []
+    },
+    {
+      "id": "seed-2026-10-21",
+      "date": "2026-10-21",
+      "prices": {
+        "TTWO": 206.16,
+        "SKYD": 7.87,
+        "META": 697.52
+      },
+      "sp": 7757.17,
+      "notes": {},
+      "sources": []
+    },
+    {
+      "id": "seed-2026-10-22",
+      "date": "2026-10-22",
+      "prices": {
+        "TTWO": 207.81,
+        "SKYD": 7.79,
+        "META": 648.85
+      },
+      "sp": 7663.43,
+      "notes": {},
+      "sources": []
+    },
+    {
+      "id": "seed-2026-10-23",
+      "date": "2026-10-23",
+      "prices": {
+        "TTWO": 207.88,
+        "SKYD": 7.77,
+        "META": 642.62
+      },
+      "sp": 7623.68,
+      "notes": {},
+      "sources": []
+    },
+    {
+      "id": "seed-2026-10-27",
+      "date": "2026-10-27",
+      "prices": {
+        "TTWO": 201.28,
+        "SKYD": 7.75,
+        "META": 620.19
+      },
+      "sp": 7722.6,
+      "notes": {},
+      "sources": []
+    },
+    {
+      "id": "seed-2026-10-28",
+      "date": "2026-10-28",
+      "prices": {
+        "TTWO": 195.29,
+        "SKYD": 7.77,
+        "META": 612.49
+      },
+      "sp": 7743.98,
+      "notes": {},
+      "sources": []
+    },
+    {
+      "id": "seed-2026-10-29",
+      "date": "2026-10-29",
+      "prices": {
+        "TTWO": 193.39,
+        "SKYD": 7.9,
+        "META": 624.52
+      },
+      "sp": 7720.39,
+      "notes": {
+        "general": "Concerns over heavy AI spending"
+      },
+      "sources": []
+    },
+    {
+      "id": "seed-2026-10-30",
+      "date": "2026-10-30",
+      "prices": {
+        "TTWO": 190.17,
+        "SKYD": 7.95,
+        "META": 614.99
+      },
+      "sp": 7580.07,
+      "notes": {
+        "general": "Many companies losing money do to quarter 3 earnings reports"
+      },
+      "sources": [
+        {
+          "title": "",
+          "url": "https://finance.yahoo.com/markets/article/tech-stock-meltdown-could-get-a-lot-of-worse-if-history-is-any-guide-161226786.html",
+          "ticker": ""
+        }
+      ]
+    },
+    {
+      "id": "seed-2026-11-02",
+      "date": "2026-11-02",
+      "prices": {
+        "TTWO": 192.1,
+        "SKYD": 8.07,
+        "META": 606.73
+      },
+      "sp": 7541.4,
+      "notes": {},
+      "sources": []
+    }
+  ]
+}

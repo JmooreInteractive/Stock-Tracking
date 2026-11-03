@@ -1,0 +1,53 @@
+name: Publish tracker
+
+# Builds the site with fresh Yahoo Finance closing prices + headlines (data/market.json)
+# and publishes it to GitHub Pages. One-time setup: Settings → Pages → Source: "GitHub Actions".
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Weekdays, times in UTC: market open, midday, and after the 4 pm ET close.
+    - cron: "10 14 * * 1-5"
+    - cron: "40 17 * * 1-5"
+    - cron: "35 21 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch closing prices and Yahoo Finance headlines
+        # Publish the site even if Yahoo is unavailable; the app falls back to links.
+        continue-on-error: true
+        run: python3 scripts/market_data.py --config tracker.config.json --out data/market.json
+
+      - name: Assemble site
+        run: |
+          mkdir _site
+          cp -r index.html assets data tracker.config.json _site/
+          touch _site/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
