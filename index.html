@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stock Tracker</title>
+  <meta name="description" content="Log daily closing prices against the S&P 500, with notes, sources, a TradingView chart and Yahoo Finance headlines.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5eff'/%3E%3Cpath d='M6 22l6-7 5 4 9-11' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <!-- TradingView advanced chart web component -->
+  <script type="module" src="https://widgets.tradingview-widget.com/w/en/tv-advanced-chart.js"></script>
+  <script type="module" src="assets/js/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7"/><path d="M6 22l6-7 5 4 9-11"/></svg>
+      <div>
+        <h1>Stock Tracker</h1>
+        <p class="muted">Closing prices vs. the S&amp;P 500, with your notes and sources</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span id="data-mode" class="pill" hidden></span>
+      <button type="button" class="btn ghost" id="btn-settings">Portfolio settings</button>
+    </div>
+  </header>
+
+  <section class="kpis" id="kpis" aria-label="Portfolio summary"></section>
+
+  <nav class="focus-bar" aria-label="Ticker">
+    <div class="seg" id="focus-tabs" role="tablist"></div>
+    <a class="focus-link" id="focus-quote-link" target="_blank" rel="noopener">Yahoo Finance quote ↗</a>
+  </nav>
+
+  <main class="layout">
+    <section class="card chart-card" aria-labelledby="chart-title">
+      <div class="card-head">
+        <h2 id="chart-title">Chart</h2>
+        <div class="head-tools">
+          <label class="compact">Interval
+            <select id="chart-interval">
+              <option value="1">1 min</option>
+              <option value="5">5 min</option>
+              <option value="15">15 min</option>
+              <option value="60">1 hour</option>
+              <option value="D">1 day</option>
+              <option value="W">1 week</option>
+            </select>
+          </label>
+          <label class="compact check"><input type="checkbox" id="chart-compare" checked> Compare panes</label>
+        </div>
+      </div>
+      <div class="chart-wrap" id="chart"></div>
+      <p class="fine muted">Chart by TradingView. <a id="tv-link" target="_blank" rel="noopener">Open on TradingView ↗</a></p>
+    </section>
+
+    <section class="card news-card" aria-labelledby="news-title">
+      <div class="card-head">
+        <h2 id="news-title">Yahoo Finance articles</h2>
+        <button type="button" class="btn small ghost" id="btn-refresh-news">Refresh</button>
+      </div>
+      <p class="fine muted" id="news-status"></p>
+      <ul class="news-list" id="news-list"></ul>
+      <div class="news-links" id="news-links"></div>
+    </section>
+
+    <section class="card log-card" aria-labelledby="log-title">
+      <div class="card-head">
+        <h2 id="log-title">Daily log</h2>
+        <div class="head-tools">
+          <label class="compact">Date <input type="date" id="entry-date" required></label>
+          <span class="badge" id="entry-badge"></span>
+        </div>
+      </div>
+
+      <form id="entry-form" autocomplete="off">
+        <div class="log-cols">
+          <div>
+            <div class="sub-head">
+              <h3>Closing prices</h3>
+              <button type="button" class="btn small" id="btn-autofill">Fill closing prices</button>
+            </div>
+            <p class="fine muted" id="autofill-status"></p>
+            <div class="price-table" id="price-grid" role="table" aria-label="Closing prices"></div>
+            <div class="preview" id="entry-preview"></div>
+            <div class="investments" id="start-investments" hidden></div>
+          </div>
+
+          <div>
+            <h3>Notes &amp; analysis</h3>
+            <div class="notes" id="notes-grid"></div>
+
+            <h3>Sources</h3>
+            <ul class="source-list" id="source-list"></ul>
+            <div class="source-add">
+              <input type="url" id="source-url" placeholder="https://… article URL" aria-label="Source URL">
+              <input type="text" id="source-title" placeholder="Title (optional)" aria-label="Source title">
+              <select id="source-ticker" aria-label="Source ticker"></select>
+              <button type="button" class="btn small" id="btn-add-source">Add</button>
+            </div>
+            <p class="fine muted">Tip: use <b>+ Source</b> on a Yahoo Finance article to add it here.</p>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn primary" id="btn-save">Save entry</button>
+          <button type="button" class="btn ghost" id="btn-copy-row" title="Copies this day as one spreadsheet row (tab-separated)">Copy as spreadsheet row</button>
+          <span class="spacer"></span>
+          <button type="button" class="btn danger ghost" id="btn-delete">Delete entry</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card table-card" aria-labelledby="table-title">
+      <div class="card-head">
+        <h2 id="table-title">Tracker spreadsheet</h2>
+        <div class="head-tools wrap">
+          <button type="button" class="btn small primary" id="btn-xlsx">Download Excel (.xlsx)</button>
+          <button type="button" class="btn small" id="btn-csv">Download CSV</button>
+          <label class="btn small ghost file">Import spreadsheet…
+            <input type="file" id="import-file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden>
+          </label>
+        </div>
+      </div>
+      <p class="fine muted legend"><span class="sw input"></span> you enter &nbsp; <span class="sw calc"></span> auto-calculated &nbsp;·&nbsp; Click a row to edit that day.</p>
+      <div class="table-wrap"><table class="sheet" id="sheet"></table></div>
+    </section>
+  </main>
+
+  <footer class="foot muted fine">
+    Your log is saved in this browser. Download the Excel file or a backup now and then. ·
+    <button type="button" class="linklike" id="btn-backup">Download backup (.json)</button> ·
+    <label class="linklike">Restore backup<input type="file" id="restore-file" accept=".json,application/json" hidden></label>
+  </footer>
+
+  <dialog id="settings" aria-labelledby="settings-title">
+    <form method="dialog" id="settings-form">
+      <h2 id="settings-title">Portfolio settings</h2>
+      <p class="fine muted">Yahoo symbol is used for prices and headlines; TradingView symbol (EXCHANGE:TICKER) drives the chart. Starting investment and the STARTING POINT row’s prices set each stock’s share count.</p>
+      <div class="settings-table" id="settings-stocks"></div>
+      <button type="button" class="btn small ghost" id="btn-add-stock">+ Add stock</button>
+      <h3>Benchmark</h3>
+      <div class="settings-table" id="settings-bench"></div>
+      <p class="fine muted">To have the scheduled job fetch headlines for a new ticker, also add it to <code>tracker.config.json</code> in the repository.</p>
+      <div class="form-actions">
+        <button type="button" class="btn danger ghost" id="btn-reset">Reset to worksheet data…</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn ghost" value="cancel" id="btn-settings-cancel">Cancel</button>
+        <button type="submit" class="btn primary" value="save">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
