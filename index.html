@@ -28,6 +28,27 @@
 
   <section class="kpis" id="kpis" aria-label="Portfolio summary"></section>
 
+  <section class="perf-wrap" aria-labelledby="perf-title">
+    <div class="card perf-card">
+      <div class="card-head">
+        <div>
+          <h2 id="perf-title">Performance comparison</h2>
+          <p class="fine muted" id="perf-sub"></p>
+        </div>
+        <div class="head-tools">
+          <div class="seg" id="perf-mode" role="tablist" aria-label="Measure">
+            <button type="button" role="tab" class="seg-btn" data-mode="pct">% since start</button>
+            <button type="button" role="tab" class="seg-btn" data-mode="value">Value ($)</button>
+          </div>
+          <button type="button" class="btn small ghost" id="btn-perf-png" title="Save this chart as an image for a report or slide">Download PNG</button>
+        </div>
+      </div>
+      <div class="series-toggles" id="perf-series" role="group" aria-label="Series to plot (click to show or hide)"></div>
+      <div class="perf-chart" id="perf-chart"></div>
+      <div class="table-wrap compare-wrap"><table class="compare" id="perf-table"></table></div>
+    </div>
+  </section>
+
   <nav class="focus-bar" aria-label="Ticker">
     <div class="seg" id="focus-tabs" role="tablist"></div>
     <a class="focus-link" id="focus-quote-link" target="_blank" rel="noopener">Yahoo Finance quote ↗</a>
@@ -36,7 +57,7 @@
   <main class="layout">
     <section class="card chart-card" aria-labelledby="chart-title">
       <div class="card-head">
-        <h2 id="chart-title">Chart</h2>
+        <h2 id="chart-title">Live chart</h2>
         <div class="head-tools">
           <label class="compact">Interval
             <select id="chart-interval">

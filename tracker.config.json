@@ -1,8 +1,8 @@
 {
   "stocks": [
-    { "symbol": "TTWO", "tvSymbol": "NASDAQ:TTWO", "investment": 4000 },
-    { "symbol": "SKYD", "tvSymbol": "NYSE:SKYD", "investment": 1000 },
-    { "symbol": "META", "tvSymbol": "NASDAQ:META", "investment": 5000 }
+    { "symbol": "TTWO", "name": "Take-Two Interactive Software", "tvSymbol": "NASDAQ:TTWO", "investment": 4000 },
+    { "symbol": "SKYD", "name": "Paramount Skydance Cl B", "tvSymbol": "NYSE:SKYD", "investment": 1000 },
+    { "symbol": "META", "name": "Meta Platforms Inc", "tvSymbol": "NASDAQ:META", "investment": 5000 }
   ],
   "benchmark": { "symbol": "^GSPC", "tvSymbol": "SP:SPX", "name": "S&P 500" }
 }

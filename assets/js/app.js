@@ -17,6 +17,7 @@ import {
 } from './model.js';
 import { buildMatrix, buildWorkbook, parseCSV, parseWorksheet, rowAsTSV, toCSV, xlsxToMatrix } from './spreadsheet.js';
 import { closeOn, loadMarketData, newsFor, timeAgo, tradingViewUrl, yahooNewsUrl, yahooQuoteUrl } from './market.js';
+import { buildPerformance, comparisonStats, mountPerfChart, perfPng, readColors, renderCompareTable, renderSeriesToggles } from './perf.js';
 
 const STORE_KEY = 'stockTracker:v1';
 const EXCELJS_URL = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
@@ -123,6 +124,8 @@ function normalizeState(s) {
   s.ui.focus ||= s.portfolio.stocks[0]?.symbol || s.portfolio.benchmark.symbol;
   s.ui.interval ||= '1';
   s.ui.compare ??= true;
+  s.ui.perfMode = s.ui.perfMode === 'value' ? 'value' : 'pct';
+  s.ui.perfHidden = Array.isArray(s.ui.perfHidden) ? s.ui.perfHidden : [];
   s.entries = sortEntries(
     (s.entries || []).map((e) => ({ id: e.id || uid(), date: e.date, prices: e.prices || {}, sp: e.sp ?? null, notes: e.notes || {}, sources: e.sources || [] })),
   );
@@ -158,6 +161,60 @@ function renderKPIs() {
     ),
     tile('Last session', formatSignedPct(last.dayPct), `${state.portfolio.benchmark.name || 'Index'} ${formatSignedPct(last.spDayPct)} same day`, signClass(last.dayPct)),
   );
+}
+
+// ---------------------------------------------------------------- performance comparison
+
+function perfText(mode, start) {
+  if (!start) return '';
+  return mode === 'pct'
+    ? `Change since the starting point on ${formatDateUS(start.date)}. Every line starts at 0%, so a $8 stock and a $600 stock compare directly.`
+    : `Dollar value of each holding and the whole portfolio. The dashed ${state.portfolio.benchmark.name || 'index'} line is what the starting ${formatMoney(start.total)} would be worth in the index.`;
+}
+
+function renderPerf() {
+  const all = rows();
+  const mode = state.ui.perfMode;
+  const hidden = new Set(state.ui.perfHidden);
+  const card = $('.perf-card');
+  const colors = readColors(card);
+  const model = buildPerformance(state.portfolio, all, mode);
+  $('#perf-sub').textContent = perfText(mode, all[0]);
+  document.querySelectorAll('#perf-mode .seg-btn').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.mode === mode)));
+  renderSeriesToggles($('#perf-series'), model, {
+    hidden,
+    colors,
+    onToggle: (key) => {
+      const set = new Set(state.ui.perfHidden);
+      set.has(key) ? set.delete(key) : set.add(key);
+      state.ui.perfHidden = [...set];
+      persist();
+      renderPerf();
+    },
+  });
+  mountPerfChart($('#perf-chart'), model, { hidden, colors, height: window.innerWidth < 560 ? 280 : 340 });
+  renderCompareTable($('#perf-table'), comparisonStats(mode === 'pct' ? model : buildPerformance(state.portfolio, all, 'pct')), {
+    colors,
+    hidden,
+    benchLabel: state.portfolio.benchmark.name || 'index',
+  });
+  $('#btn-perf-png').disabled = all.length < 2;
+}
+
+async function downloadPerfPng() {
+  const all = rows();
+  const mode = state.ui.perfMode;
+  try {
+    const blob = await perfPng(buildPerformance(state.portfolio, all, mode), {
+      hidden: new Set(state.ui.perfHidden),
+      colors: readColors($('.perf-card')),
+      title: mode === 'pct' ? `Performance since ${formatDateUS(all[0].date)} (% change)` : `Holding values since ${formatDateUS(all[0].date)} ($)`,
+      subtitle: `Logged closes ${formatDateUS(all[0].date)} – ${formatDateUS(all[all.length - 1].date)} · ${all.length} days`,
+    });
+    download(`performance-${mode === 'pct' ? 'percent' : 'value'}-${todayISO()}.png`, blob);
+  } catch (err) {
+    toast(err.message, 'warn');
+  }
 }
 
 // ---------------------------------------------------------------- focus, chart, news
@@ -329,7 +386,7 @@ function renderPriceGrid() {
     h(
       'div',
       { class: 'pt-row', role: 'row' },
-      h('span', { class: 'pt-sym', role: 'cell' }, s.symbol, marketName(s.symbol) ? h('small', {}, marketName(s.symbol)) : null),
+      h('span', { class: 'pt-sym', role: 'cell' }, s.symbol, marketName(s.symbol) || s.name ? h('small', {}, marketName(s.symbol) || s.name) : null),
       h('span', { role: 'cell' }, priceInput(s.symbol, draft.prices[s.symbol], (v) => (v == null ? delete draft.prices[s.symbol] : (draft.prices[s.symbol] = v)))),
       h('span', { class: 'calc', role: 'cell', 'data-calc': `value:${s.symbol}` }),
       h('span', { class: 'calc', role: 'cell', 'data-calc': `pct:${s.symbol}` }),
@@ -505,6 +562,7 @@ function deleteDraft() {
   toast(`Deleted ${formatDateUS(e.date)}.`);
   loadDraft(draft.date);
   renderKPIs();
+  renderPerf();
 }
 
 async function copyRow() {
@@ -716,7 +774,8 @@ function saveSettings(ev) {
     if (!SYMBOL_RE.test(symbol)) return toast(`"${symbol}" doesn't look like a ticker symbol.`, 'warn');
     if (stocks.some((s) => s.symbol === symbol)) return toast(`${symbol} is listed twice.`, 'warn');
     if (!(investment > 0)) return toast(`Enter a starting investment for ${symbol}.`, 'warn');
-    stocks.push({ symbol, tvSymbol, investment });
+    const prev = state.portfolio.stocks.find((s) => s.symbol === symbol);
+    stocks.push(prev?.name ? { symbol, name: prev.name, tvSymbol, investment } : { symbol, tvSymbol, investment });
     if (r.dataset.original && r.dataset.original !== symbol) renames.push([r.dataset.original, symbol]);
   }
   if (!stocks.length) return toast('Keep at least one stock.', 'warn');
@@ -750,6 +809,7 @@ async function resetAll() {
 
 function renderAll(reloadDraft = false) {
   renderKPIs();
+  renderPerf();
   renderFocus();
   renderChart();
   if (reloadDraft || !draft) loadDraft(draft?.date || todayISO());
@@ -811,6 +871,26 @@ function wire() {
   window.addEventListener('beforeunload', (ev) => {
     if (dirty) ev.preventDefault();
   });
+
+  document.querySelectorAll('#perf-mode .seg-btn').forEach((b) =>
+    b.addEventListener('click', () => {
+      state.ui.perfMode = b.dataset.mode;
+      persist();
+      renderPerf();
+    }),
+  );
+  $('#btn-perf-png').addEventListener('click', downloadPerfPng);
+  // redraw the SVG when its width changes, or when the OS switches light/dark
+  let lastWidth = 0;
+  let frame = 0;
+  new ResizeObserver(([entry]) => {
+    const w = Math.round(entry.contentRect.width);
+    if (w === lastWidth) return;
+    lastWidth = w;
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(renderPerf);
+  }).observe($('#perf-chart'));
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', renderPerf);
 }
 
 async function init() {

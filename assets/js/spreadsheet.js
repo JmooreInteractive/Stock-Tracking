@@ -6,8 +6,8 @@ import {
   DEFAULT_PORTFOLIO,
   GENERAL_NOTE,
   cellToNotes,
-  cellToSources,
   computeRows,
+  extractSources,
   formatDateUS,
   formatMoney,
   formatPct,
@@ -226,7 +226,12 @@ export function parseWorksheet(matrix, current = DEFAULT_PORTFOLIO) {
     }
     const sp = spCol >= 0 ? parseNumber(row[spCol]) : null;
     const { notes, sources } = cellToNotes(notesCol >= 0 ? text(row[notesCol]) : '', symbols);
-    if (sourcesCol >= 0) sources.push(...cellToSources(text(row[sourcesCol])));
+    if (sourcesCol >= 0) {
+      const extra = extractSources(text(row[sourcesCol]));
+      sources.push(...extra.sources);
+      const already = Object.values(notes).join('\n');
+      if (extra.rest && !already.includes(extra.rest)) notes[GENERAL_NOTE] = notes[GENERAL_NOTE] ? `${notes[GENERAL_NOTE]}\n${extra.rest}` : extra.rest;
+    }
     if (!Object.keys(prices).length && sp == null && !Object.keys(notes).length && !sources.length) continue;
     byDate.set(date, { id: uid(), date, prices, sp, notes, sources: dedupeSources(sources) });
     startCells.set(date, row);
@@ -243,11 +248,13 @@ export function parseWorksheet(matrix, current = DEFAULT_PORTFOLIO) {
       const sh = parseNumber(startRow[c.shares]);
       if (sh != null) investment = Math.round(sh * price * 100) / 100;
     }
-    return {
+    const stock = {
       symbol: c.symbol,
       tvSymbol: existing?.tvSymbol || c.symbol,
-      investment: investment ?? existing?.investment ?? 1000,
+      investment: investment != null ? Math.round(investment * 100) / 100 : (existing?.investment ?? 1000),
     };
+    if (existing?.name) stock.name = existing.name;
+    return stock;
   });
   const benchmark = { ...current.benchmark };
   if (spCol >= 0 && groups[spCol]) benchmark.name = groups[spCol];

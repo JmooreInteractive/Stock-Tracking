@@ -221,19 +221,30 @@ export function cellToNotes(text, symbols) {
   return { notes, sources };
 }
 
-/** Reverse of sourcesToCell; also tolerates plain URLs separated by spaces, "|" or ";". */
-export function cellToSources(text) {
-  const out = [];
-  if (!text) return out;
+/**
+ * Reverse of sourcesToCell; also tolerates plain URLs separated by spaces, "|" or ";".
+ * Free text typed next to a bare URL (e.g. "https://… Many companies losing money …")
+ * is returned as `rest` so it can be kept as a note instead of being dropped.
+ */
+export function extractSources(text) {
+  const sources = [];
+  const rest = [];
+  if (!text) return { sources, rest: '' };
   for (const line of String(text).split(/\r?\n|\s\|\s/)) {
     const m = line.trim().match(/^(?:\[([^\]]+)\]\s*)?(?:(.*?)\s+—\s+)?(https?:\/\/\S+)\s*$/);
     if (m) {
-      out.push({ ticker: (m[1] || '').trim(), title: (m[2] || '').trim(), url: m[3] });
-    } else {
-      for (const url of line.match(URL_RE) || []) out.push({ ticker: '', title: '', url });
+      sources.push({ ticker: (m[1] || '').trim(), title: (m[2] || '').trim(), url: m[3] });
+      continue;
     }
+    for (const url of line.match(URL_RE) || []) sources.push({ ticker: '', title: '', url: url.replace(/[).,;]+$/, '') });
+    const leftover = line.replace(URL_RE, ' ').replace(/\s{2,}/g, ' ').trim();
+    if (leftover) rest.push(leftover);
   }
-  return out;
+  return { sources, rest: rest.join('\n') };
+}
+
+export function cellToSources(text) {
+  return extractSources(text).sources;
 }
 
 // ---------- misc ----------
