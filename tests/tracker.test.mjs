@@ -149,9 +149,30 @@ test('Excel export: live formulas with cached results, colors, and round trip', 
 
   const buf = await wb.xlsx.writeBuffer();
   const back = parseWorksheet(await xlsxToMatrix(ExcelJS, buf), config);
-  assert.equal(back.entries.length, 9);
+  assert.equal(back.entries.length, seed.entries.length);
   assert.deepEqual(back.entries[8].prices, seed.entries[8].prices);
   assert.deepEqual(back.portfolio.stocks.map((s) => s.investment), [4000, 1000, 5000]);
+});
+
+test('imports the V41 Excel workbook (merged NOTES / Sources columns, Info & Setup sheet)', async () => {
+  const buf = readFileSync(new URL('./fixtures/worksheet_v41.xlsx', import.meta.url));
+  const { portfolio, entries } = parseWorksheet(await xlsxToMatrix(ExcelJS, buf), config);
+  assert.deepEqual(portfolio.stocks.map((s) => [s.symbol, s.investment, s.name]), [
+    ['TTWO', 4000, 'Take-Two Interactive Software'],
+    ['SKYD', 1000, 'Paramount Skydance Cl B'], // 1000.0000000000001 in the sheet, rounded to cents
+    ['META', 5000, 'Meta Platforms Inc'],
+  ]);
+  assert.deepEqual(entries.map((e) => e.date).slice(-3), ['2026-11-02', '2026-11-04', '2026-11-06']);
+  assert.deepEqual(entries[10].prices, { TTWO: 214.87, SKYD: 8.01, META: 610.15 });
+  assert.equal(entries[10].sp, 7376.86);
+  assert.equal(entries[6].notes.general, 'Concerns over heavy AI spending');
+  // a bare URL followed by a comment in the Sources cell keeps the comment as a note
+  assert.equal(entries[7].notes.general, 'Many companies losing money do to quarter 3 earnings reports');
+  assert.equal(entries[7].sources.length, 1);
+  assert.equal(entries[9].sources.length, 6);
+  assert.deepEqual(entries[9].sources.map((s) => s.ticker), ['TTWO', 'TTWO', 'SKYD', 'SKYD', 'SKYD', 'META']);
+  assert.equal(entries[9].sources[0].title, 'Why Piper Sandler Thinks You Should Buy Take-Two Stock Before November 19');
+  assert.deepEqual(entries.map((e) => e.date), seed.entries.map((e) => e.date), 'seed history is the V41 workbook');
 });
 
 test('works with a different number of stocks', async () => {

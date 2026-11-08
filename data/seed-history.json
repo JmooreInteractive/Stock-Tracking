@@ -1,5 +1,5 @@
 {
-  "note": "Imported from STOCK_TRACKER_WORKSHEET_V4 (Tracker tab). Loaded the first time the app opens in a browser.",
+  "note": "Imported from STOCK_TRACKER_WORKSHEET_V41 (Tracker tab). Loaded the first time the app opens in a browser, and by Portfolio settings → Reset.",
   "entries": [
     {
       "id": "seed-2026-10-20",
@@ -101,9 +101,9 @@
       },
       "sources": [
         {
+          "ticker": "",
           "title": "",
-          "url": "https://finance.yahoo.com/markets/article/tech-stock-meltdown-could-get-a-lot-of-worse-if-history-is-any-guide-161226786.html",
-          "ticker": ""
+          "url": "https://finance.yahoo.com/markets/article/tech-stock-meltdown-could-get-a-lot-of-worse-if-history-is-any-guide-161226786.html"
         }
       ]
     },
@@ -118,6 +118,82 @@
       "sp": 7541.4,
       "notes": {},
       "sources": []
+    },
+    {
+      "id": "seed-2026-11-04",
+      "date": "2026-11-04",
+      "prices": {
+        "TTWO": 208.9,
+        "SKYD": 8.39,
+        "META": 630
+      },
+      "sp": 7688.62,
+      "notes": {},
+      "sources": [
+        {
+          "ticker": "TTWO",
+          "title": "Why Piper Sandler Thinks You Should Buy Take-Two Stock Before November 19",
+          "url": "https://finance.yahoo.com/markets/stocks/articles/why-piper-sandler-thinks-buy-145221003.html"
+        },
+        {
+          "ticker": "TTWO",
+          "title": "Why Take Two Stock Is Up 8.9% And What's Next",
+          "url": "https://finance.yahoo.com/markets/stocks/articles/why-two-stock-8-9-181408843.html"
+        },
+        {
+          "ticker": "SKYD",
+          "title": "Skydance (SKYD) Just Gave The Market Something To Think About",
+          "url": "https://finance.yahoo.com/markets/stocks/articles/skydance-skyd-just-gave-market-201110995.html"
+        },
+        {
+          "ticker": "SKYD",
+          "title": "Can Skydance (SKYD) Still Be A Bargain After Musk’s $1b Investment?",
+          "url": "https://finance.yahoo.com/markets/stocks/articles/skydance-skyd-still-bargain-musk-031149188.html"
+        },
+        {
+          "ticker": "SKYD",
+          "title": "Skydance (SKYD) Names Nitin Chawla To Lead Global Content Sales Finance",
+          "url": "https://finance.yahoo.com/media-advertising/articles/skydance-skyd-names-nitin-chawla-021625075.html"
+        },
+        {
+          "ticker": "META",
+          "title": "Republican Senator Who Won Reelection Is Selling Magnificent Seven Stocks: Here Are the Trades",
+          "url": "https://finance.yahoo.com/markets/stocks/articles/republican-senator-won-reelection-selling-193025792.html"
+        }
+      ]
+    },
+    {
+      "id": "seed-2026-11-06",
+      "date": "2026-11-06",
+      "prices": {
+        "TTWO": 214.87,
+        "SKYD": 8.01,
+        "META": 610.15
+      },
+      "sp": 7376.86,
+      "notes": {},
+      "sources": [
+        {
+          "ticker": "META",
+          "title": "Tech Stock Sell-Off 'Golden Buying Opportunity,' Says Dan Ives",
+          "url": "https://finance.yahoo.com/m/aeb920dc-4bcd-3531-8458-6a642b7135df/tech-stock-sell-off-%27golden.html"
+        },
+        {
+          "ticker": "META",
+          "title": "Microsoft and Google Face a New Bill as Data Centers “Have to Pay Their Own Costs”",
+          "url": "https://finance.yahoo.com/technology/articles/microsoft-google-face-bill-data-193517316.html"
+        },
+        {
+          "ticker": "SKYD",
+          "title": "Ahead of Skydance Earnings, Here's What Barchart Data Says Comes Next for SKYD Stock",
+          "url": "https://finance.yahoo.com/markets/stocks/articles/ahead-skydance-earnings-heres-barchart-145148425.html"
+        },
+        {
+          "ticker": "TTWO",
+          "title": "Roth Capital Adjusts Price Target on Take-Two Interactive Software to $272 From $300",
+          "url": "https://finance.yahoo.com/markets/stocks/articles/roth-capital-adjusts-price-target-115126286.html"
+        }
+      ]
     }
   ]
 }
