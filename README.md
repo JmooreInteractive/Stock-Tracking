@@ -8,7 +8,7 @@ A one-page tracker for logging each stock's daily close against the S&P 500. It 
 - **A performance comparison chart** of everything you've logged: each stock, the S&P 500 and the whole portfolio on one chart.
 - **The tracker spreadsheet.** The math matches `STOCK_TRACKER_WORKSHEET_V4` exactly (values, % vs. day 1, S&P % and portfolio % day over day, total portfolio %). You can download it as Excel or CSV in the same layout.
 
-Your existing history from `STOCK_TRACKER_WORKSHEET_V41` (10/20/2026 to 11/6/2026) is preloaded.
+Your history from `STOCK_TRACKER_WORKSHEET_V42` (10/20/2026 to 11/6/2026) is preloaded. That's V41 plus researched sources for every logged day (Yahoo Finance, Nasdaq, Google Finance, NYSE, company investor-relations pages and SEC filings), and the actual S&P 500 close on 10/20/2026 (7,712.57) as the starting point.
 
 ## Comparing your stocks
 
@@ -60,7 +60,7 @@ This opens http://localhost:8000. Headlines and closes come live from Yahoo Fina
 | **Download Excel (.xlsx)** | The full Tracker sheet in your worksheet's layout (columns A–V, plus W for sources). Yellow input cells, blue formula cells, frozen headers. Formulas are guarded, so a missing price leaves a blank instead of `#VALUE!`. |
 | **Download CSV** | The same sheet as values. Opens in Excel or imports into Google Sheets. |
 | **Copy as spreadsheet row** | One day as a tab-separated row. Click column A of that day's row in your existing sheet and paste. |
-| **Import spreadsheet…** | Loads a tracker CSV or .xlsx: your V4/V41 worksheet (including the Info & Setup layout), or a file this app exported. |
+| **Import spreadsheet…** | Loads a tracker CSV or .xlsx: your V4/V41/V42 worksheet (including the Info & Setup layout), or a file this app exported. Days in the file are added or updated (prices from the file, sources combined). Days, notes and sources that exist only in the tracker are kept. |
 
 In the NOTES column, market notes come first, then `TICKER: …` lines. SOURCES has one `[TICKER] Title — URL` line per source. Re-importing the file turns these back into per-stock notes and sources.
 

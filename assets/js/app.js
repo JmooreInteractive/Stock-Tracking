@@ -9,6 +9,7 @@ import {
   formatShares,
   formatSignedPct,
   isHttpUrl,
+  mergeEntries,
   parseNumber,
   renameSymbolInEntries,
   sortEntries,
@@ -697,12 +698,18 @@ async function importSheet(file) {
     }
     const { portfolio, entries } = parseWorksheet(matrix, state.portfolio);
     const range = `${formatDateUS(entries[0].date)} – ${formatDateUS(entries[entries.length - 1].date)}`;
+    const fileDates = new Set(entries.map((e) => e.date));
+    const updated = state.entries.filter((e) => fileDates.has(e.date)).length;
+    const kept = state.entries.filter((e) => !fileDates.has(e.date));
     const ok = confirm(
-      `Import ${entries.length} days (${range}) for ${portfolio.stocks.map((s) => s.symbol).join(', ')}?\n\nThis replaces the ${state.entries.length} days currently in the tracker. Starting investments: ${portfolio.stocks.map((s) => `${s.symbol} ${formatMoney(s.investment)}`).join(', ')}.`,
+      `Import ${entries.length} days (${range}) for ${portfolio.stocks.map((s) => s.symbol).join(', ')}?\n\n` +
+        `• ${entries.length - updated} new day(s) added, ${updated} day(s) updated with the file's prices, notes and sources.\n` +
+        `• Sources and notes already in the tracker are kept${kept.length ? `, and ${kept.length} day(s) not in the file stay as they are (${kept.map((e) => formatDateUS(e.date)).join(', ')})` : ''}.\n` +
+        `• Starting investments from the file: ${portfolio.stocks.map((s) => `${s.symbol} ${formatMoney(s.investment)}`).join(', ')}.`,
     );
     if (!ok) return;
     state.portfolio = portfolio;
-    state.entries = entries;
+    state.entries = mergeEntries(state.entries, entries);
     normalizeState(state);
     persist();
     renderAll(true);
