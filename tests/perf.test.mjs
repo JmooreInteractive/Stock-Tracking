@@ -21,7 +21,7 @@ test('% mode: every series starts at 0 and matches the worksheet % columns', () 
   assert.equal(at('SKYD'), 12.82);
   assert.equal(at('META'), -12.11);
   assert.equal(at(PORTFOLIO_KEY), -3.19); // worksheet T14
-  assert.equal(at('^GSPC'), -7.79); // 7376.86 vs the 8,000 starting value
+  assert.equal(at('^GSPC'), -4.35); // 7,376.86 vs the actual 10/20 close of 7,712.57
 });
 
 test('$ mode: holdings in dollars, index scaled to the same starting dollars', () => {
@@ -31,7 +31,7 @@ test('$ mode: holdings in dollars, index scaled to the same starting dollars', (
   assert.equal(Math.round(s[PORTFOLIO_KEY][0]), 10000);
   assert.equal(Math.round(s['^GSPC'][0]), 10000);
   assert.equal(Math.round(s[PORTFOLIO_KEY][10] * 100) / 100, 9680.58);
-  assert.equal(Math.round(s['^GSPC'][10] * 100) / 100, 9221.07); // $10,000 × 7,376.86 / 8,000
+  assert.equal(Math.round(s['^GSPC'][10] * 100) / 100, 9564.72); // $10,000 × 7,376.86 / 7,712.57
 });
 
 test('comparison table: ranked by change since start, gap to S&P, best and worst moves', () => {
@@ -39,11 +39,12 @@ test('comparison table: ranked by change since start, gap to S&P, best and worst
   assert.deepEqual(stats.map((s) => s.key), ['SKYD', 'TTWO', PORTFOLIO_KEY, '^GSPC', 'META']);
   const skyd = stats[0];
   assert.equal(skyd.latest, 8.01);
-  assert.equal(pct2(skyd.vsBench), 20.61);
+  assert.equal(pct2(skyd.vsBench), 17.17);
   assert.deepEqual([pct2(skyd.best.pct), skyd.best.date], [10.85, '2026-10-21']);
   assert.deepEqual([pct2(skyd.worst.pct), skyd.worst.date], [-4.53, '2026-11-06']);
+  assert.equal(pct2(stats.find((s) => s.key === PORTFOLIO_KEY).vsBench), 1.16, 'portfolio ahead of the index');
   const meta = stats.find((s) => s.key === 'META');
-  assert.equal(pct2(meta.vsBench), -4.32);
+  assert.equal(pct2(meta.vsBench), -7.76);
   assert.deepEqual([pct2(meta.worst.pct), meta.worst.date], [-6.98, '2026-10-22']);
   assert.equal(stats.find((s) => s.key === '^GSPC').vsBench, null);
 });

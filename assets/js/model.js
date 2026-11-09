@@ -257,6 +257,30 @@ export function allSymbols(portfolio) {
   return [...portfolio.stocks.map((s) => s.symbol), portfolio.benchmark.symbol];
 }
 
+/**
+ * Combine an imported log with the one already in the tracker, losing nothing:
+ * - days only in the tracker are kept;
+ * - for days in both, prices and the S&P close come from the import, notes from the
+ *   import win per section (market / each ticker) but sections only in the tracker stay,
+ *   and sources are the union (import first, then any extra links already logged).
+ */
+export function mergeEntries(existing, incoming) {
+  const byDate = new Map(existing.map((e) => [e.date, e]));
+  const merged = incoming.map((inc) => {
+    const old = byDate.get(inc.date);
+    byDate.delete(inc.date);
+    if (!old) return inc;
+    const urls = new Set((inc.sources || []).map((s) => s.url));
+    return {
+      ...inc,
+      id: old.id,
+      notes: { ...(old.notes || {}), ...(inc.notes || {}) },
+      sources: [...(inc.sources || []), ...(old.sources || []).filter((s) => !urls.has(s.url))],
+    };
+  });
+  return sortEntries([...merged, ...byDate.values()]);
+}
+
 /** Rename a ticker everywhere it is used as a key inside entries. */
 export function renameSymbolInEntries(entries, from, to) {
   if (from === to) return entries;

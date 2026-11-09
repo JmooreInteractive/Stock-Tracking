@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import ExcelJS from 'exceljs';
 
-import { cellToNotes, cellToSources, computeRows, notesToCell, parseDate, parseNumber, renameSymbolInEntries, sourcesToCell } from '../assets/js/model.js';
+import { cellToNotes, cellToSources, computeRows, mergeEntries, notesToCell, parseDate, parseNumber, renameSymbolInEntries, sourcesToCell } from '../assets/js/model.js';
 import { buildMatrix, buildWorkbook, parseCSV, parseWorksheet, rowAsTSV, toCSV, xlsxToMatrix } from '../assets/js/spreadsheet.js';
 
 const worksheet = readFileSync(new URL('./fixtures/worksheet_v4.csv', import.meta.url), 'utf8');
@@ -42,7 +42,8 @@ test('imports the V4 worksheet CSV: portfolio, prices, notes and sources', () =>
 });
 
 test('calculations reproduce the worksheet values exactly', () => {
-  const rows = computeRows(config, seed.entries);
+  // the V4 worksheet as handed in (S&P start 8,000), so every figure can be checked against it
+  const rows = computeRows(config, parseWorksheet(parseCSV(worksheet)).entries);
   const byTrack = (t) => rows[t];
   assert.equal(rows[0].track, 'STARTING POINT');
   assert.equal(cents(rows[0].total), 10000);
@@ -98,7 +99,7 @@ test('notes and sources survive the trip through single spreadsheet cells', () =
 });
 
 test('CSV export matches the worksheet layout and re-imports losslessly', () => {
-  const entries = structuredClone(seed.entries);
+  const entries = parseWorksheet(parseCSV(worksheet)).entries;
   entries[8].notes = { general: 'Flat day, "quiet" tape', META: 'AI spend, again' };
   entries[8].sources = [{ ticker: 'META', title: 'Meta, capex', url: 'https://finance.yahoo.com/news/m.html' }];
   const matrix = buildMatrix(config, entries);
@@ -172,7 +173,41 @@ test('imports the V41 Excel workbook (merged NOTES / Sources columns, Info & Set
   assert.equal(entries[9].sources.length, 6);
   assert.deepEqual(entries[9].sources.map((s) => s.ticker), ['TTWO', 'TTWO', 'SKYD', 'SKYD', 'SKYD', 'META']);
   assert.equal(entries[9].sources[0].title, 'Why Piper Sandler Thinks You Should Buy Take-Two Stock Before November 19');
-  assert.deepEqual(entries.map((e) => e.date), seed.entries.map((e) => e.date), 'seed history is the V41 workbook');
+  assert.deepEqual(entries.map((e) => e.date), seed.entries.map((e) => e.date), 'seed history covers the same days');
+});
+
+test('V42 workbook: researched sources added per day, real S&P start; the seed history is this file', async () => {
+  const buf = readFileSync(new URL('./fixtures/worksheet_v42.xlsx', import.meta.url));
+  const { entries } = parseWorksheet(await xlsxToMatrix(ExcelJS, buf), config);
+  assert.equal(entries[0].sp, 7712.57, 'actual S&P 500 close on 10/20/2026');
+  assert.equal(Math.round(computeRows(config, entries)[1].spDayPct * 10000) / 100, 0.58);
+  assert.deepEqual(entries.map((e) => e.sources.length), [3, 4, 4, 2, 7, 2, 4, 6, 4, 9, 9]);
+  // V41's own sources and notes are untouched and come first
+  assert.equal(entries[9].sources[0].title, 'Why Piper Sandler Thinks You Should Buy Take-Two Stock Before November 19');
+  assert.equal(entries[7].notes.general, 'Many companies losing money do to quarter 3 earnings reports');
+  assert.ok(entries.every((e) => e.sources.every((s) => /^https:\/\//.test(s.url))));
+  assert.ok(entries[4].sources.some((s) => s.ticker === 'TTWO' && /BofA/.test(s.title)));
+  const strip = (list) => list.map(({ id, ...rest }) => rest); // eslint-disable-line no-unused-vars
+  assert.deepEqual(strip(seed.entries), strip(entries));
+});
+
+test('importing merges by date and never drops what is already in the tracker', () => {
+  const existing = [
+    { id: 'a', date: '2026-11-04', prices: { TTWO: 1 }, sp: 1, notes: { general: 'mine', META: 'my META note' }, sources: [{ ticker: 'META', title: 'mine', url: 'https://x.test/mine' }] },
+    { id: 'b', date: '2026-11-09', prices: { TTWO: 220 }, sp: 7400, notes: {}, sources: [] },
+  ];
+  const incoming = [
+    { id: 'n1', date: '2026-11-02', prices: { TTWO: 192.1 }, sp: 7541.4, notes: {}, sources: [] },
+    { id: 'n2', date: '2026-11-04', prices: { TTWO: 208.9 }, sp: 7688.62, notes: { general: 'from file' }, sources: [{ ticker: 'TTWO', title: 'file', url: 'https://x.test/file' }, { ticker: 'META', title: 'dup', url: 'https://x.test/mine' }] },
+  ];
+  const out = mergeEntries(existing, incoming);
+  assert.deepEqual(out.map((e) => e.date), ['2026-11-02', '2026-11-04', '2026-11-09'], 'day only in the tracker (11/9) is kept');
+  const nov4 = out[1];
+  assert.equal(nov4.id, 'a');
+  assert.deepEqual(nov4.prices, { TTWO: 208.9 }, 'prices come from the file');
+  assert.equal(nov4.sp, 7688.62);
+  assert.deepEqual(nov4.notes, { general: 'from file', META: 'my META note' });
+  assert.deepEqual(nov4.sources.map((s) => s.url), ['https://x.test/file', 'https://x.test/mine'], 'union of sources, no duplicates');
 });
 
 test('works with a different number of stocks', async () => {
